@@ -1,0 +1,23 @@
+
+## The development environment uses sqlite as a database.
+##
+## This connection string will cause the sqlite database to be located in 
+## the root directory of the ptj project under 'data/ptj.db'
+
+db_conn: "sqlite://$DATADIR$/ptj.db"
+
+## ... Or you can specify a hash of seperated parameters.
+## The configuration below is loosely based on a production config.yml
+## which uses postgres as its backend db repository.
+
+#db_conn: 
+#  adapter:  'postgres'
+#  database: 'ptj'
+#  username: 'ptj'
+#  password: 'abc123'
+#  host:     '172.16.51.145'
+
+
+
+
+

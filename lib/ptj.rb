@@ -1,0 +1,5 @@
+require 'rubygems'
+require 'ptj/environment'
+require 'ptj/ext'
+require 'ptj/model'
+require 'ptj/parser'

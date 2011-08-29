@@ -1,0 +1,1 @@
+require 'ptj/parser/fileparser'

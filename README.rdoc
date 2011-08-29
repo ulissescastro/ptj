@@ -1,6 +1,75 @@
-= ptj
+= PTJ
 
-Description goes here.
+Minimalistic database for the analyzing and storing of passwords.
+
+== Using PTJ
+
+=== Setup
+
+First, we want to ensure our configuration file is correct.
+
+  gem which ptj
+  /some/path/gems/ptj-0.1.0/lib/ptj.rb
+
+Navigate to the 'etc' directory
+
+  cd /some/path/gems/ptj-0.1.0/etc/
+
+Modify the configuration file to point to the correct database (default is a 
+local SQLite database).
+
+When this is complete, you can setup a new project as such:
+
+  require 'ptj'
+  PTJ::Model.setup!
+  DataMapper.auto_upgrade!
+
+=== Importing Data
+
+There is a provided script which will allow you to import data into the PTJ
+database.
+
+Working with our PTJ path above, it can be found in
+  
+  /some/path/gems/ptj-0.1.0/scripts/import.rb
+
+Running it, you can see the following options:
+
+  ruby scripts/import.rb -h
+
+  Usage: import.rb [opts] -f file|-p password
+    -t, --tag TAGS                   Tags to be used to identify imported passwords (separated by a comma)
+        --[no-]strict                Enable/Disable Strict Mode
+    -f, --file FILENAME              File to import.
+    -r, --parser NUMBER              File parser to use:
+                                     1 - Password Only
+                                     2 - Hash:Password
+                                     3 - Count, Password
+                                     4 - Something ::: Password ::: Something
+    -p, --password PASSWORD          Password to import.
+    -a, --hash HASH                  Hash to import (Use in conjunction with -p).
+    -h, --help                       Show this message.
+  
+If you feel like doing it the hard way, feel free to view the source of this
+script.
+
+=== Analying Data
+
+Again, there is a handy, included, script which can be used to quickly generate
+and 'analysis' of a subset of passwords. It can be found in the 'scripts' 
+directory as well.
+
+  ruby script/analyze.rb -h
+
+  Usage: analyze.rb [opts]
+    -t, --tags TAGS                  Tags to be used to when querying passwords (separated by a comma)
+        --max-size SIZE              Maximum size of the resulting passords
+        --min-size SIZE              Minimum size of the resulting passwords
+        --[no-]upper                 Query based on upper-case letters
+        --[no-]lower                 Query based on lower-case letters
+        --[no-]special               Query based on special charaters
+        --[no-]number                Query based on numbers
+    -h, --help                       Show this message
 
 == Contributing to ptj
  
@@ -16,4 +85,12 @@ Description goes here.
 
 Copyright (c) 2011 Josh Grunzweig. See LICENSE.txt for
 further details.
+
+
+== TODO
+
+* Batch imports?
+* specs / unit tests :/
+* benchmark unit tests with various actions
+
 
