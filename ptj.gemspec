@@ -42,6 +42,7 @@ Gem::Specification.new do |s|
     "lib/ptj/parser/fileparser/passhashonly.rb",
     "lib/ptj/parser/fileparser/passonly.rb",
     "lib/ptj/parser/fileparser/passthreecolons.rb",
+    "ptj.gemspec",
     "scripts/analyze.rb",
     "scripts/generate_wordlist.rb",
     "scripts/import.rb",
