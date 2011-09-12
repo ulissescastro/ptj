@@ -4,7 +4,7 @@
 ## This connection string will cause the sqlite database to be located in 
 ## the root directory of the ptj project under 'data/ptj.db'
 
-db_conn: "sqlite://$DATADIR$/ptj.db"
+#db_conn: "sqlite://$DATADIR$/ptj.db"
 
 ## ... Or you can specify a hash of seperated parameters.
 ## The configuration below is loosely based on a production config.yml
