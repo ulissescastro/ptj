@@ -49,6 +49,7 @@ GEM
       git (>= 1.2.5)
       rake
     json (1.4.6)
+    progressbar (0.9.1)
     rake (0.9.2)
     rcov (0.9.10)
     rspec (2.3.0)
@@ -79,6 +80,7 @@ DEPENDENCIES
   dm-types
   dm-validations
   jeweler (~> 1.6.2)
+  progressbar
   rcov
   rspec (~> 2.3.0)
   shoulda
