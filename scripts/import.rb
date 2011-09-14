@@ -2,6 +2,14 @@
 require 'pp'
 require 'optparse'
 
+begin
+  #require 'progressbar'
+rescue
+  puts "Sorry, you need to install the progressbar gem, because it's fancy",
+       "Example: gem install progressbar"
+  exit
+end
+
 require_relative('ptj_libpath')
 require 'ptj/default_setup'
 
@@ -71,41 +79,44 @@ end.parse!(ARGV)
 
 raise(OptionParser::MissingArgument, "Must specify file with -f or password with -p") if (CFG[:file].nil? and CFG[:password].nil?)
 
-#o_pass_count = Password.all(:fields => [:id]).size
-
-
 def import_file
-  file = Pathname.new(CFG[:file])
-  parser = CFG[:parser]
-  tags = CFG[:tags]
-  file = File.open(CFG[:file], "r")
-  lines = file.readlines
-  lines.each do |line|
-    begin
-      line = line.force_encoding("BINARY")
-      parsed = parser.parse_line(line)
-      mypass = parsed[:mypass]
-      myhash = parsed[:myhash]
-      next if mypass.to_s.empty?
-      if parsed[:count]
-        parsed[:count].to_i.times do 
-          pass = Password.add_single(mypass, myhash)
+  Password.transaction do
+    file = Pathname.new(CFG[:file])
+    parser = CFG[:parser]
+    tags = CFG[:tags]
+    file = File.open(CFG[:file], "r")
+    lines = file.readlines
+    #prog = ProgressBar.new("Importing...", lines.size)
+    counter = 0
+    lines.each do |line|
+      begin
+        line = line.force_encoding("BINARY")
+        parsed = parser.parse_line(line)
+        mypass = parsed[:mypass]
+        myhash = parsed[:myhash]
+        next if mypass.to_s.empty?
+        if parsed[:count]
+          parsed[:count].to_i.times do 
+            pass = Password.create(:password => mypass, :pw_hash => myhash||"")
+            #prog.set(counter)
+            counter = counter+1
+            tags.each{|tag| pass.tags << tag}
+          end
+        else
+          pass = Password.create(:password => mypass, :pw_hash => myhash||"")
+          #prog.set(counter)
+          counter = counter+1
           tags.each{|tag| pass.tags << tag}
-          pass.save
-          #puts "Adding #{mypass}"
         end
-      else
-        pass = Password.add_single(mypass, myhash)
-        tags.each{|tag| pass.tags << tag}
-        pass.save
-        #puts "Adding #{mypass}"
+      rescue StandardError => e
+        p e.message
+        next
       end
-    rescue
-      next
     end
   end
 end
 
+the_time = Time.now
 import_file
-
+puts "Time taken: #{Time.now - the_time}"
 
