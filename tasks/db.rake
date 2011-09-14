@@ -14,22 +14,13 @@ namespace :db do
     puts "Database initialized"
   end
   
-  namespace :size do
-    desc "Dump db record counts"
-    task :default do
-      require 'ptj/default_setup'
-      puts  "Passwords:   #{PTJ::Password.all.size}"
-      puts "Tags:   #{PTJ::Tag.all.size}"
-    end
-
-    desc "Dump db record counts with debugging"
-    task :debug do
-      require 'ptj/default_setup'
-      time_now = Time.now
-      puts "Passwords:   #{PTJ::Password.all.size}"
-      puts "Tags:   #{PTJ::Tag.all.size}"
-      puts "Time Taken: #{Time.now - time_now} seconds."
-    end
+  desc "Dump db record counts with debugging"
+  task :count do
+    require 'ptj/default_setup'
+    time_now = Time.now
+    puts "Passwords:   #{PTJ::Password.count}"
+    puts "Tags:        #{PTJ::Tag.count}"
+    puts "Time Taken: #{Time.now - time_now} seconds."
   end
 
   desc "Backup the development database"
