@@ -13,6 +13,9 @@ module PTJ
         raise(NotImplementedError, "This is an abstract implementation, you must override parse_line")
       end
 
+      def total_count(line)
+        raise(NotImplementedError, "This is an abstract implementation, you must override parse_line")
+      end
     end
   end
 end
