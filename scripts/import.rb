@@ -1,14 +1,7 @@
 #!/usr/bin/env ruby
 require 'pp'
 require 'optparse'
-
-begin
-  #require 'progressbar'
-rescue
-  puts "Sorry, you need to install the progressbar gem, because it's fancy",
-       "Example: gem install progressbar"
-  exit
-end
+require 'progressbar'
 
 require_relative('ptj_libpath')
 require 'ptj/default_setup'
@@ -84,9 +77,10 @@ def import_file
     file = Pathname.new(CFG[:file])
     parser = CFG[:parser]
     tags = CFG[:tags]
-    file = File.open(CFG[:file], "r")
-    lines = file.readlines
-    #prog = ProgressBar.new("Importing...", lines.size)
+    file_obj = File.new(file, "r")
+    lines = file_obj.readlines
+    total_count = parser.total_count(file)
+    prog = ProgressBar.new("Importing...", total_count)
     counter = 0
     lines.each do |line|
       begin
@@ -98,15 +92,17 @@ def import_file
         if parsed[:count]
           parsed[:count].to_i.times do 
             pass = Password.create(:password => mypass, :pw_hash => myhash||"")
-            #prog.set(counter)
+            prog.set(counter)
             counter = counter+1
             tags.each{|tag| pass.tags << tag}
+            pass.save
           end
         else
           pass = Password.create(:password => mypass, :pw_hash => myhash||"")
-          #prog.set(counter)
+          prog.set(counter)
           counter = counter+1
           tags.each{|tag| pass.tags << tag}
+          pass.save
         end
       rescue StandardError => e
         p e.message
@@ -116,7 +112,5 @@ def import_file
   end
 end
 
-the_time = Time.now
 import_file
-puts "Time taken: #{Time.now - the_time}"
 
