@@ -91,26 +91,6 @@ module PTJ
       return {:lower => lower, :upper => upper, :special => special, :number => number}
     end
 
-    # Add a single password/hash to the database.
-    #
-    # @param mypass
-    #   Password to add.
-    #
-    # @param myhash
-    #   Password hash to add.
-    #
-    # @return DataMapper::Password
-    def self.add_single(mypass, myhash = "")
-      begin
-        return if mypass.to_s.empty?
-        pass = Password.create!(:password => mypass, :pw_hash => myhash)
-        pass.save!
-        pass
-      rescue
-        return
-      end
-    end
-
   end
 end
 
