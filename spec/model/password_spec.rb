@@ -13,7 +13,7 @@ describe PTJ::Password do
   context "basic functionality" do
     before :each do
       @ctime = Time.now
-      @obj = PTJ::Password.add_single("password", "abchash")
+      @obj = PTJ::Password.create(:password => "password", :pw_hash => "abchash")
     end
 
     it_should_behave_like "a valid ptj model"
