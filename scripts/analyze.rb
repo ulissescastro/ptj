@@ -9,7 +9,6 @@ DataMapper::Model.raise_on_save_failure = true if $DEBUG
 
 include PTJ
 
-#FILTER = {:fields => [:id, :password, :upper, :lower, :special, :number, :size]}
 FILTER = {}
 CFG = {
   :tags => [],
@@ -34,11 +33,11 @@ opts = OptionParser.new do |o|
   end
 
   o.on("--max-size SIZE", Integer, "Maximum size of the resulting passords") do |f|
-    FILTER[:size.lt] = f
+    FILTER[:size.lte] = f
   end
 
   o.on("--min-size SIZE", Integer, "Minimum size of the resulting passwords") do |f|
-    FILTER[:size.gt] = f
+    FILTER[:size.gte] = f
   end
 
   o.on("--[no-]upper", "Query based on upper-case letters") do |f|
@@ -71,6 +70,12 @@ def size_count(object, my_hash)
   return object.aggregate(:size, :size.count, my_hash).sort {|x,y| x[0] <=> y[0]}
 end
 
+def top_sequences(object, my_hash)
+  my_hash.delete(:fields) if my_hash[:fields]
+  my_hash.delete(:order) if my_hash[:order]
+  return object.aggregate(:sequence, :sequence.count, my_hash).sort {|x,y| y[1] <=> x[1]}.first(5)
+end
+
 def cat_result(object, my_hash)
   my_hash.delete(:fields) if my_hash[:fields]
   my_hash.delete(:order) if my_hash[:order]
@@ -93,15 +98,19 @@ def cat_result(object, my_hash)
   return_hash
 end
 
+
+
 time_now = Time.now
-if CFG[:tags]
+if CFG[:tags].empty?
+  top5 = top5_pass(PTJ::Password.all, FILTER)
+  top_seq = top_sequences(PTJ::Password.all, FILTER)
+  my_count = size_count(PTJ::Password.all, FILTER)
+  split_up = cat_result(PTJ::Password.all, FILTER)
+else
   top5 = top5_pass(PTJ::Tag.all(:tag => CFG[:tags]).passwords, FILTER)
+  top_seq = top_sequences(PTJ::Tag.all(:tag => CFG[:tags]).passwords, FILTER)
   my_count = size_count(PTJ::Tag.all(:tag => CFG[:tags]).passwords, FILTER)
   split_up = cat_result(PTJ::Tag.all(:tag => CFG[:tags]).passwords, FILTER)
-else
-  top5 = top5_pass(PTJ::Passwords.all, FILTER)
-  my_count = size_count(PTJ::Passwords.all, FILTER)
-  split_up = cat_result(PTJ::Passwords.all, FILTER)
 end
 
 
@@ -112,7 +121,9 @@ top5.each do |pass, count|
 end
 
 total_size = 0
+
 my_count.each{|result| total_size += result[1] }
+
 puts "\n-=-=-=-=-=- Password Length -=-=-=-=-=-"
 my_count.each do |result|
   percent = "%.2f" % ((result[1].to_f/total_size.to_f)*100).to_f  
@@ -126,4 +137,10 @@ split_up.sort_by{|k,v| k.length}.each do |result|
   printf("Type: %-30s %s", result[0], ("Result: #{result[1]}"))
   puts ""
 end
-p "Time taken: #{Time.now - time_now}"
+
+puts "\n-=-=-=-=-=- Top Sequences -=-=-=-=-=-"
+top_seq.each do |seq, count|
+  printf("%-30s : %d", seq, count)
+  puts ""
+end
+puts "\nTime taken: #{Time.now - time_now}"
