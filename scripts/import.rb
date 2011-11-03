@@ -73,42 +73,54 @@ end.parse!(ARGV)
 raise(OptionParser::MissingArgument, "Must specify file with -f or password with -p") if (CFG[:file].nil? and CFG[:password].nil?)
 
 def import_file
-  Password.transaction do
-    file = Pathname.new(CFG[:file])
-    parser = CFG[:parser]
-    tags = CFG[:tags]
-    file_obj = File.new(file, "r")
-    lines = file_obj.readlines
-    total_count = parser.total_count(file)
-    prog = ProgressBar.new("Importing...", total_count)
-    counter = 0
-    lines.each do |line|
-      begin
-        line = line.force_encoding("BINARY")
-        parsed = parser.parse_line(line)
-        mypass = parsed[:mypass]
-        myhash = parsed[:myhash]
-        next if mypass.to_s.empty?
-        if parsed[:count]
-          parsed[:count].to_i.times do 
-            pass = Password.create(:password => mypass, :pw_hash => myhash||"")
+  file = Pathname.new(CFG[:file])
+  parser = CFG[:parser]
+  tags = CFG[:tags]
+  file_obj = File.new(file, "r")
+  total_count = parser.total_count(file)
+  prog = ProgressBar.new("Importing...", total_count+1)
+  counter = 0
+  threshold = 2000
+  queue_array = []
+  while (line = file_obj.gets)
+    begin
+      line = line.force_encoding("BINARY")
+      parsed = parser.parse_line(line)
+      queue_array = queue_array + parsed
+      while (queue_array.size > threshold)
+        Password.transaction do
+          queue_array[0..(threshold-1)].each do |myhash|
+            next if myhash[:mypass].to_s.empty?
+            pass = Password.create(:password => myhash[:mypass], :pw_hash => myhash[:myhash]||"")
             prog.set(counter)
             counter = counter+1
+            pass.save
             tags.each{|tag| pass.tags << tag}
             pass.save
           end
-        else
-          pass = Password.create(:password => mypass, :pw_hash => myhash||"")
-          prog.set(counter)
-          counter = counter+1
-          tags.each{|tag| pass.tags << tag}
-          pass.save
+          queue_array = queue_array[(threshold)..queue_array.size]
         end
-      rescue StandardError => e
-        p e.message
-        next
+      end
+    rescue StandardError => e
+      p e.message
+      next
+    end
+  end
+
+  begin
+    Password.transaction do
+      queue_array.each do |myhash|
+        next if myhash[:mypass].to_s.empty?
+        pass = Password.create(:password => myhash[:mypass], :pw_hash => myhash[:myhash]||"")
+        prog.set(counter)
+        counter = counter+1
+        pass.save
+        tags.each{|tag| pass.tags << tag}
+        pass.save
       end
     end
+  rescue StandardError => e
+    p e.message
   end
 end
 
