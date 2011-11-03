@@ -14,20 +14,9 @@ module PTJ
       end
 
       def total_count(file)
-        file_obj = File.new(file,'r')
-        lines = file_obj.readlines 
-        counter = 0
-        lines.each do |line|
-          line = line.force_encoding("BINARY")
-          return_hash = self.parse_line(line)
-          if return_hash.has_key?(:count)
-            counter = counter + return_hash[:count].to_i
-          else
-            counter = counter + 1
-          end
-        end
-        counter
+        raise(NotImplementedError, "This is an abstract implementation, you must override parse_line")
       end
+        
     end
   end
 end
