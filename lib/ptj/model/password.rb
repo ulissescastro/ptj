@@ -37,6 +37,10 @@ module PTJ
     property :size,         Integer,
       :default => lambda{|this,p| this.password.size }
 
+    # sequence of upper, lower, special, and number
+    property :sequence,       String,
+      :default => lambda{|this,p| this.password.gsub(/[a-z]/,"l").gsub(/[A-Z]/,"u").gsub(/[0-9]/,"n").gsub(/[^uln]/,"s") }
+
     # Tags associated with a sample
     has n, :tags, :through => Resource
 
