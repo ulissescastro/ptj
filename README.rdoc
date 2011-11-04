@@ -134,14 +134,14 @@ http://datamapper.org/docs/
 A few examples:
 
 Querying all samples with the tag of 'internal':
-PTJ::Tag.get('internal').passwords
+  PTJ::Tag.get('internal').passwords
 
 Querying all samples with upper-case and lower-case characters with a tag of
 'internal':
-PTJ::Tag.get('internal').passwords.all(:upper => true, :lower => true)
+  PTJ::Tag.get('internal').passwords.all(:upper => true, :lower => true)
 
 Get a list of the top sequences used by passwords:
-PTJ::Password.aggregate(:sequence, :sequence.count).sort{|x,y| y[1] <=> x[1]}.each{|x| p x}
+  PTJ::Password.aggregate(:sequence, :sequence.count).sort{|x,y| y[1] <=> x[1]}.each{|x| p x}
 
 == Contributing to ptj
  
