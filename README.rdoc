@@ -1,12 +1,51 @@
 = PTJ
 
-Minimalistic database for the analyzing and storing of passwords.
+Minimalistic database for the analyzing and storing of passwords. This project
+came to be out of the need to quickly analyze a large number of passwords in a
+short timeframe. As I, like most of you I'm sure, got tired of a simple 
+ruby/python/perl/bash/<insert language> script against a text file, the idea of
+storing everything in a database came to be. I know, it's nothing revolutionary.
+
+I'm using DataMapper in order to provide a database-agnostic front-end for users
+to easily (well, somewhat easily) query and extract analytics against the entire
+database, or a subset of passwords within the database.
+
+'Tags' are used as a way to categorize subsets of passwords. Think of them like
+you would tags on a blog post. You might categorize a subset as 'public', or 
+'internal', or perhaps 'company_name'. The number of tags which can be assigned
+to groups of passwords is unlimited, and provides an easy way to ensure the 
+wrong passwords are not analyzed. This comes in handy when you want to, say, 
+do an analysis on every password you cracked on an internal network every 
+month, quarter, or year. 
+
+The following stats of a given password are currently being stored in the 
+Password table:
+
+id - Sequential number used as the database key.
+password - Plaintext password
+pw_hash - Hash of the password, if known. 
+created_at - Time of when the password was added to the database.
+upper - Boolean value telling you if an upper-case character is present.
+lower - Boolean value telling you if a lower-case character is present.
+number - Boolean value telling you if a number is present.
+special - Boolean value telling you if a special character is present.
+size - Length of the password.
+sequence - Sequence of characters found in the password. 
+  u - upper-case
+  l - lower-case
+  n - number
+  s - special
+  Example: Password123! => ulllllllnnns
+  
+Any number of combinations of these values, along with the tags can be used to
+look at subsets of data.
 
 == Using PTJ
 
 === Setup
 
-First, we want to ensure our configuration file is correct.
+Grab the repo, or grab the gem. The only difference should be the path where
+everything is stored. You can find the path of the gem like so,
 
   gem which ptj
   /some/path/gems/ptj-0.1.0/lib/ptj.rb
@@ -15,23 +54,24 @@ Navigate to the 'etc' directory
 
   cd /some/path/gems/ptj-0.1.0/etc/
 
-Modify the configuration file to point to the correct database (default is a 
-local SQLite database).
+Modify the configuration file to point to the correct database.
 
 When this is complete, you can setup a new project as such:
 
-  require 'ptj'
-  PTJ::Model.setup!
-  DataMapper.auto_upgrade!
+  rake db:init
+
+In order to test that this was successful, attempt to get the count of all items
+in the database.
+
+  rake db:count
+    Passwords:   0
+    Tags:        0
+    Time Taken: 0.03307 seconds.
 
 === Importing Data
 
 There is a provided script which will allow you to import data into the PTJ
 database.
-
-Working with our PTJ path above, it can be found in
-  
-  /some/path/gems/ptj-0.1.0/scripts/import.rb
 
 Running it, you can see the following options:
 
@@ -50,16 +90,18 @@ Running it, you can see the following options:
     -a, --hash HASH                  Hash to import (Use in conjunction with -p).
     -h, --help                       Show this message.
   
+
 If you feel like doing it the hard way, feel free to view the source of this
-script.
+script. Honestly, it's not terribly difficult. However, the script will allow
+you to see the status of the import via a progress bar. 
 
 === Analying Data
 
 Again, there is a handy, included, script which can be used to quickly generate
-and 'analysis' of a subset of passwords. It can be found in the 'scripts' 
+an 'analysis' of a subset of passwords. It can be found in the 'scripts' 
 directory as well.
 
-  ruby script/analyze.rb -h
+  ruby scripts/analyze.rb -h
 
   Usage: analyze.rb [opts]
     -t, --tags TAGS                  Tags to be used to when querying passwords (separated by a comma)
@@ -70,6 +112,36 @@ directory as well.
         --[no-]special               Query based on special charaters
         --[no-]number                Query based on numbers
     -h, --help                       Show this message
+
+== Generating Wordlists
+
+Guess what? There's another script that we can use to generate a customized
+wordlist, sorted by number of occurrances. This really comes in handy once the 
+PTJ database becomes full of rich data, and we're looking for the top 'X' 
+passwords which meets a certain criteria. For example, let's say that we're on
+an internal penetration test, and we need the top 20 passwords which include a 
+special character. We can simply run:
+
+  ruby scripts/generate_wordlist.rb -t internal --special
+
+
+== Other Queries
+
+Other queries can easily be made into a script, or simply from within irb. In
+order to do this, you really should take a look at DataMapper's documentation:
+http://datamapper.org/docs/
+
+A few examples:
+
+Querying all samples with the tag of 'internal':
+PTJ::Tag.get('internal').passwords
+
+Querying all samples with upper-case and lower-case characters with a tag of
+'internal':
+PTJ::Tag.get('internal').passwords.all(:upper => true, :lower => true)
+
+Get a list of the top sequences used by passwords:
+PTJ::Password.aggregate(:sequence, :sequence.count).sort{|x,y| y[1] <=> x[1]}.each{|x| p x}
 
 == Contributing to ptj
  
@@ -86,11 +158,5 @@ directory as well.
 Copyright (c) 2011 Josh Grunzweig. See LICENSE.txt for
 further details.
 
-
-== TODO
-
-* Batch imports?
-* specs / unit tests :/
-* benchmark unit tests with various actions
 
 
