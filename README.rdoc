@@ -21,21 +21,21 @@ month, quarter, or year.
 The following stats of a given password are currently being stored in the 
 Password table:
 
-id - Sequential number used as the database key.
-password - Plaintext password
-pw_hash - Hash of the password, if known. 
-created_at - Time of when the password was added to the database.
-upper - Boolean value telling you if an upper-case character is present.
-lower - Boolean value telling you if a lower-case character is present.
-number - Boolean value telling you if a number is present.
-special - Boolean value telling you if a special character is present.
-size - Length of the password.
-sequence - Sequence of characters found in the password. 
-  u - upper-case
-  l - lower-case
-  n - number
-  s - special
-  Example: Password123! => ulllllllnnns
+  id - Sequential number used as the database key.
+  password - Plaintext password
+  pw_hash - Hash of the password, if known. 
+  created_at - Time of when the password was added to the database.
+  upper - Boolean value telling you if an upper-case character is present.
+  lower - Boolean value telling you if a lower-case character is present.
+  number - Boolean value telling you if a number is present.
+  special - Boolean value telling you if a special character is present.
+  size - Length of the password.
+  sequence - Sequence of characters found in the password. 
+    u - upper-case
+    l - lower-case
+    n - number
+    s - special
+    Example: Password123! => ulllllllnnns
   
 Any number of combinations of these values, along with the tags can be used to
 look at subsets of data.
