@@ -86,7 +86,7 @@ def import_file
     begin
       line = line.force_encoding("BINARY")
       parsed = parser.parse_line(line)
-      queue_array = queue_array + parsed
+      queue_array = queue_array << parsed
       while (queue_array.size > threshold)
         Password.transaction do
           queue_array[0..(threshold-1)].each do |myhash|
