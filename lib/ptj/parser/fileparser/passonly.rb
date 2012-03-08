@@ -13,7 +13,7 @@ module PTJ
       #   Individual line from a text file
       #
       # @return Hash Password, Password Hash
-      def parse_line(line)
+      def self.parse_line(line)
         if line =~ /^\s*(\S+)\s*$/
           pass = $~[1]
           hash = nil
