@@ -68,25 +68,25 @@ module PTJ
         upper = true 
       when /^[0-9]+$/
         number = true
-      when /^([a-zA-Z]*([a-z]+[A-Z]+|[A-Z]+[a-z]+)[a-zA-Z]*)$/
+      when /^[^0-9\p{Punct}]+$/ 
         lower = upper = true
-      when /^([a-z0-9]*([a-z]+[0-9]+|[0-9]+[a-z]+)[a-z0-9]*)$/
+      when /^[^A-Z\p{Punct}]+$/
         lower = number = true
-      when /^(([a-z]|[^a-zA-Z0-9])*([a-z]+[^a-zA-Z0-9]+|[^a-zA-Z0-9]+[a-z]+)([a-z]|[^a-zA-Z0-9])*)$/
+      when /^[^A-Z0-9]+$/
         lower = special = true
-      when /^([0-9A-Z]*([0-9]+[A-Z]+|[A-Z]+[0-9]+)[0-9A-Z]*)$/
+      when /^[^a-z\p{Punct}]+$/
         upper = number = true
-      when /^(([A-Z]|[^a-zA-Z0-9])*([A-Z]+[^a-zA-Z0-9]+|[^a-zA-Z0-9]+[A-Z]+)([A-Z]|[^a-zA-Z0-9])*)$/
+      when /^[^a-z0-9]+$/
         upper = special = true
-      when /^(([0-9]|[^a-zA-Z0-9])*([0-9]+[^a-zA-Z0-9]+|[^a-zA-Z0-9]+[0-9]+)([0-9]|[^a-zA-Z0-9])*)$/
+      when /^[^a-zA-Z]+$/
         number = special = true
-      when /^([a-zA-Z0-9]*([a-z]+[A-Z]+[0-9]+|[a-z]+[0-9]+[A-Z]+|[A-Z]+[a-z]+[0-9]+|[A-Z]+[0-9]+[a-z]+|[0-9]+[A-Z]+[a-z]+|[0-9]+[a-z]+[A-Z]+)+[a-zA-Z0-9]*)$/
+      when /^[^\p{Punct}]+$/
         lower = upper = number = true
-      when /^(([^a-zA-Z0-9]|[A-Z0-9])*([^a-zA-Z0-9]+[A-Z]+[0-9]+|[^a-zA-Z0-9]+[0-9]+[A-Z]+|[A-Z]+[^a-zA-Z0-9]+[0-9]+|[A-Z]+[0-9]+[^a-zA-Z0-9]+|[0-9]+[A-Z]+[^a-zA-Z0-9]+|[0-9]+[^a-zA-Z0-9]+[A-Z]+)+([^a-zA-Z0-9]|[A-Z0-9])*)$/
+      when /^[^a-z]+$/
         upper = number = special = true
-      when /^(([^a-zA-Z0-9]|[a-z0-9])*([^a-zA-Z0-9]+[a-z]+[0-9]+|[^a-zA-Z0-9]+[0-9]+[a-z]+|[a-z]+[^a-zA-Z0-9]+[0-9]+|[a-z]+[0-9]+[^a-zA-Z0-9]+|[0-9]+[a-z]+[^a-zA-Z0-9]+|[0-9]+[^a-zA-Z0-9]+[a-z]+)+([^a-zA-Z0-9]|[a-z0-9])*)$/
+      when /^[^A-Z]+$/
         lower = number = special = true
-      when /^(([^a-zA-Z0-9]|[a-zA-Z])*([^a-zA-Z0-9]+[a-z]+[A-Z]+|[^a-zA-Z0-9]+[A-Z]+[a-z]+|[a-z]+[^a-zA-Z0-9]+[A-Z]+|[a-z]+[A-Z]+[^a-zA-Z0-9]+|[A-Z]+[a-z]+[^a-zA-Z0-9]+|[A-Z]+[^a-zA-Z0-9]+[a-z]+)+([^a-zA-Z0-9]|[a-zA-Z])*)$/
+      when /^[^0-9]+$/
         lower = upper = special = true
       else
         lower = number = special = upper = true unless pass == ""
@@ -94,6 +94,52 @@ module PTJ
       
       return {:lower => lower, :upper => upper, :special => special, :number => number}
     end
+
+
+    def self.import(file, parser, tags = [])
+      actual_tags = []
+      tags.each do |tag|
+        tag = Tag.get(tag) || Tag.create(:tag => tag)
+        actual_tags << tag
+      end
+      file = Pathname.new(file) unless file.is_a?(Pathname)
+      lines = file.readlines
+      counter = 0
+      threshold = 2000
+      queue_array = []
+      lines.each do |line|  
+        begin
+          parsed = parser.parse_line(line.chomp)
+          queue_array = queue_array << parsed
+          while (queue_array.size > threshold)
+            do_transaction(queue_array[0..(threshold-1)], actual_tags)
+            queue_array = queue_array[(threshold)..queue_array.size]
+          end
+        rescue StandardError => e
+          puts "[**] Error encountered when importing '#{line.chomp}'\n[*] Message: #{e.message}"
+          next
+        end
+      end
+      begin
+        do_transaction(queue_array, actual_tags)
+      rescue StandardError => e
+        puts "[**] Error encountered when importing '#{line.chomp}'\n[*] Message: #{e.message}"
+      end
+    end
+
+    private
+
+    def self.do_transaction(array, tags)
+      Password.transaction do
+        array.each do |myhash|
+          next if myhash[:mypass].to_s.empty?
+          pass = Password.create( :password => myhash[:mypass], 
+                                  :pw_hash => myhash[:myhash] || "", 
+                                  :tags => tags)
+        end
+      end
+    end
+ 
 
   end
 end
